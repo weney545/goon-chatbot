@@ -1,46 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>G.O.O.N Chat Bot</title>
-  <style>
-    body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
-    #chat { max-height: 70vh; overflow-y: auto; margin-bottom: 10px; }
-    .msg { margin: 5px 0; }
-    .user { color: cyan; }
-    .bot { color: orange; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G.O.O.N Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .chat-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px; /* Limit height for scrollability */
+        }
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #e6f7ff;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .bot-message {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+            margin-right: auto;
+        }
+        .chat-input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        .chat-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+            outline: none;
+        }
+        .chat-send-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+        .chat-send-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-  <h1>🤖 G.O.O.N Chat Bot</h1>
-  <div id="chat"></div>
-  <input id="input" type="text" placeholder="Say something..." style="width:100%;">
-  <script>
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('input');
-    const backend = 'https://YOUR_BACKEND_URL/chat'; // replace later
+    <div class="chat-container">
+        <div class="chat-header">
+            G.O.O.N Chatbot
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="user-input" placeholder="Type your message...">
+            <button class="chat-send-btn" id="send-btn">Send</button>
+        </div>
+    </div>
 
-    async function sendMessage(msg) {
-      chat.innerHTML += `<div class="msg user">🧑: ${msg}</div>`;
-      const res = await fetch(backend, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ message: msg })
-      });
-      const data = await res.json();
-      chat.innerHTML += `<div class="msg bot">🤖: ${data.reply}</div>`;
-      chat.scrollTop = chat.scrollHeight;
-    }
+    <script>
+        // THIS IS THE CRITICAL LINE TO UPDATE!
+        const backend = 'https://goon-backend.onrender.com/chat'; // YOUR RENDER BACKEND URL + /chat
 
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const msg = input.value.trim();
-        if (msg) {
-          sendMessage(msg);
-          input.value = '';
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function addMessage(text, sender) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble');
+            messageBubble.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageBubble.textContent = text;
+            chatMessages.appendChild(messageBubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
         }
-      }
-    });
-  </script>
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            addMessage(message, 'user');
+            userInput.value = ''; // Clear input
+
+            try {
+                const response = await fetch(backend, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                addMessage(data.reply, 'bot');
+            } catch (error) {
+                console.error('Error sending message to backend:', error);
+                addMessage('Oops! Something went wrong. Please try again.', 'bot');
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initial welcome message (optional)
+        addMessage("Hello! I'm G.O.O.N. How can I help you today?", 'bot');
+
+    </script>
 </body>
 </html>
