@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>G.O.O.N Chat Bot</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
+    #chat { max-height: 70vh; overflow-y: auto; margin-bottom: 10px; }
+    .msg { margin: 5px 0; }
+    .user { color: cyan; }
+    .bot { color: orange; }
+  </style>
+</head>
+<body>
+  <h1>🤖 G.O.O.N Chat Bot</h1>
+  <div id="chat"></div>
+  <input id="input" type="text" placeholder="Say something..." style="width:100%;">
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const backend = 'https://YOUR_BACKEND_URL/chat'; // replace later
+
+    async function sendMessage(msg) {
+      chat.innerHTML += `<div class="msg user">🧑: ${msg}</div>`;
+      const res = await fetch(backend, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      chat.innerHTML += `<div class="msg bot">🤖: ${data.reply}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const msg = input.value.trim();
+        if (msg) {
+          sendMessage(msg);
+          input.value = '';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
